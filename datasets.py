@@ -65,5 +65,5 @@ class BaseTextIterDataset(torch.utils.data.IterableDataset):
 
     def __iter__(self):
         for examples in self.ds.take(1):
-            for example in examples['text']:
+            for example in examples:
                 yield example
