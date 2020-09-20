@@ -64,7 +64,5 @@ class BaseTextIterDataset(torch.utils.data.IterableDataset):
         self.ds = ds.batch(self.epoch_size).prefetch(tf.data.experimental.AUTOTUNE)
 
     def __iter__(self):
-        for examples in self.ds.take(1):
-            for example in examples:
-                print(example)
-                yield example
+        for example in tfds.as_numpy(self.ds.take(1)):
+            yield example
