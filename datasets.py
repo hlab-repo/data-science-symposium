@@ -64,5 +64,8 @@ class BaseTextIterDataset(torch.utils.data.IterableDataset):
         self.ds = ds.batch(self.epoch_size).prefetch(tf.data.experimental.AUTOTUNE)
 
     def __iter__(self):
-        for example in tfds.as_numpy(self.ds.take(1)):
-            yield example
+        for i, example in enumerate(tfds.as_numpy(self.ds.take(1))):
+            convert = lambda object_array: [o.decode() for o in object_array.tolist()]
+            modified_example = {k: convert(v) if v.dtype == 'object' else torch.from_numpy(v)
+                                for k, v in example.items()}
+            yield modified_example
