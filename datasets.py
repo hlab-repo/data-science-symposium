@@ -69,3 +69,25 @@ class BaseTextIterDataset(torch.utils.data.IterableDataset):
             modified_example = {k: convert(v) if v.dtype == 'object' else torch.from_numpy(v)
                                 for k, v in example.items()}
             yield modified_example
+
+
+class TextClassificationDataset(BaseTextIterDataset):
+
+    def __init__(self, tf_dataset='wikipedia/20190301.en',
+                 epoch_size=32_768,
+                 split_='train',
+                 shuffle_files=True,
+                 supervised_text='text',
+                 supervised_label='toxicity'):
+        super(TextClassificationDataset, self).__init__(
+            tf_dataset=tf_dataset,
+            epoch_size=epoch_size,
+            split_=split_,
+            shuffle_files=shuffle_files)
+        self.supervised_text = supervised_text
+        self.supervised_label = supervised_label
+
+    def __iter__(self):
+        modified_example = super(TextClassificationDataset, self).__iter__()
+        for example in modified_example:
+            yield example[self.supervised_text], example[self.supervised_label]
