@@ -19,7 +19,7 @@ class BaseTextIterDataset(torch.utils.data.IterableDataset):
     """
 
     def __init__(self, tf_dataset='wikipedia/20190301.en',
-                 epoch_size=32_768,
+                 batch_size=16,
                  split_='train',
                  shuffle_files=True):
         """
@@ -56,15 +56,15 @@ class BaseTextIterDataset(torch.utils.data.IterableDataset):
 
         """
         super(BaseTextIterDataset).__init__()
-        self.epoch_size = epoch_size
+        self.batch_size = batch_size
         self.name = tf_dataset
 
         # Construct a tf.data.Dataset
         ds = tfds.load(tf_dataset, split=split_, shuffle_files=shuffle_files)
-        self.ds = ds.batch(self.epoch_size).prefetch(tf.data.experimental.AUTOTUNE)
+        self.ds = ds.batch(self.batch_size).prefetch(tf.data.experimental.AUTOTUNE)
 
     def __iter__(self):
-        for i, example in enumerate(tfds.as_numpy(self.ds.take(1))):
+        for example in tfds.as_numpy(self.ds.take(1)):
             convert = lambda object_array: [o.decode() for o in object_array.tolist()]
             modified_example = {k: convert(v) if v.dtype == 'object' else torch.from_numpy(v)
                                 for k, v in example.items()}
@@ -74,14 +74,14 @@ class BaseTextIterDataset(torch.utils.data.IterableDataset):
 class TextClassificationDataset(BaseTextIterDataset):
 
     def __init__(self, tf_dataset='wikipedia_toxicity_subtypes',
-                 epoch_size=32_768,
+                 batch_size=16,
                  split_='train',
                  shuffle_files=True,
                  supervised_text='text',
                  supervised_label='toxicity'):
         super(TextClassificationDataset, self).__init__(
             tf_dataset=tf_dataset,
-            epoch_size=epoch_size,
+            batch_size=batch_size,
             split_=split_,
             shuffle_files=shuffle_files)
         self.supervised_text = supervised_text
@@ -89,5 +89,5 @@ class TextClassificationDataset(BaseTextIterDataset):
 
     def __iter__(self):
         modified_example = super(TextClassificationDataset, self).__iter__()
-        example = next(modified_example)
-        return example[self.supervised_text], example[self.supervised_label]
+        for example in modified_example:
+            yield example[self.supervised_text], example[self.supervised_label]
