@@ -73,7 +73,7 @@ class BaseTextIterDataset(torch.utils.data.IterableDataset):
 
 class TextClassificationDataset(BaseTextIterDataset):
 
-    def __init__(self, tf_dataset='wikipedia/20190301.en',
+    def __init__(self, tf_dataset='wikipedia_toxicity_subtypes',
                  epoch_size=32_768,
                  split_='train',
                  shuffle_files=True,
@@ -89,5 +89,5 @@ class TextClassificationDataset(BaseTextIterDataset):
 
     def __iter__(self):
         modified_example = super(TextClassificationDataset, self).__iter__()
-        for example in modified_example:
-            yield example[self.supervised_text], example[self.supervised_label]
+        example = next(modified_example)
+        return example[self.supervised_text], example[self.supervised_label]
