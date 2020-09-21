@@ -19,7 +19,6 @@ class BaseTextIterDataset(torch.utils.data.IterableDataset):
     """
 
     def __init__(self, tf_dataset='wikipedia/20190301.en',
-                 batch_size=16,
                  split_='train',
                  shuffle_files=True):
         """
@@ -56,12 +55,11 @@ class BaseTextIterDataset(torch.utils.data.IterableDataset):
 
         """
         super(BaseTextIterDataset).__init__()
-        self.batch_size = batch_size
         self.name = tf_dataset
 
         # Construct a tf.data.Dataset
         ds = tfds.load(tf_dataset, split=split_, shuffle_files=shuffle_files)
-        self.ds = ds.batch(self.batch_size).prefetch(tf.data.experimental.AUTOTUNE)
+        self.ds = ds.batch(1).prefetch(tf.data.experimental.AUTOTUNE)
 
     def __iter__(self):
         for example in tfds.as_numpy(self.ds.take(1)):
@@ -74,14 +72,12 @@ class BaseTextIterDataset(torch.utils.data.IterableDataset):
 class TextClassificationDataset(BaseTextIterDataset):
 
     def __init__(self, tf_dataset='wikipedia_toxicity_subtypes',
-                 batch_size=16,
                  split_='train',
                  shuffle_files=True,
                  supervised_text='text',
                  supervised_label='toxicity'):
         super(TextClassificationDataset, self).__init__(
             tf_dataset=tf_dataset,
-            batch_size=batch_size,
             split_=split_,
             shuffle_files=shuffle_files)
         self.supervised_text = supervised_text
@@ -90,4 +86,4 @@ class TextClassificationDataset(BaseTextIterDataset):
     def __iter__(self):
         modified_example = super(TextClassificationDataset, self).__iter__()
         for example in modified_example:
-            yield example[self.supervised_text], example[self.supervised_label]
+            yield example[self.supervised_text][0], example[self.supervised_label]
